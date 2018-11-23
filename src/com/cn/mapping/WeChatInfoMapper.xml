@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.cn.mapper.WeChatInfoDAO">
+    <resultMap id="BaseResultMap" type="com.cn.model.weChat.WeChatInfo">
+        <id property="pkId" column="pk_id" jdbcType="BIGINT"/>
+        <result property="authorizerAppid" column="authorizer_appid" jdbcType="VARCHAR"/>
+        <result property="tenantId" column="tenant_id" jdbcType="VARCHAR"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="nickName" column="nick_name" jdbcType="VARCHAR"/>
+        <result property="headImg" column="head_img" jdbcType="VARCHAR"/>
+        <result property="serviceTypeInfo" column="service_type_info" jdbcType="VARCHAR"/>
+        <result property="verifyTypeInfo" column="verify_type_info" jdbcType="VARCHAR"/>
+        <result property="principalName" column="principal_name" jdbcType="VARCHAR"/>
+        <result property="qrcodeUrl" column="qrcode_url" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="VARCHAR"/>
+        <result property="createUserId" column="create_user_id" jdbcType="VARCHAR"/>
+        <result property="accessUpdateTime" column="access_update_time" jdbcType="VARCHAR"/>
+        <result property="refreshUpdateTime" column="refresh_update_time" jdbcType="VARCHAR"/>
+        <result property="authorizationCode" column="authorization_code" jdbcType="VARCHAR"/>
+        <result property="authorizerAccessToken" column="authorizer_access_token" jdbcType="VARCHAR"/>
+        <result property="authorizerRefreshToken" column="authorizer_refresh_token" jdbcType="VARCHAR"/>
+        <result property="authorizerState" column="authorizer_state" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        pk_id,authorizer_appid,tenant_id,user_name,nick_name,head_img,service_type_info,verify_type_info,principal_name,qrcode_url,create_time,
+        create_user_id,access_update_time,refresh_update_time,authorization_code,authorizer_access_token,authorizer_refresh_token,authorizer_state
+    </sql>
+
+    <insert id="saveWeChatInfo" parameterType="com.cn.model.weChat.WeChatInfo">
+        INSERT INTO db_WuLiu.cltm_wechat_info(pk_id,authorizer_appid,tenant_id,user_name,nick_name,head_img,service_type_info,verify_type_info,principal_name,qrcode_url,create_time,
+        create_user_id,access_update_time,refresh_update_time,authorization_code,authorizer_access_token,authorizer_refresh_token,authorizer_state)
+        VALUES (#{pkId,jdbcType=BIGINT},#{authorizerAppid,jdbcType=VARCHAR},#{tenantId,jdbcType=VARCHAR},#{userName,jdbcType=VARCHAR},#{nickName,jdbcType=VARCHAR},
+        #{headImg,jdbcType=VARCHAR},#{serviceTypeInfo,jdbcType=VARCHAR},#{verifyTypeInfo,jdbcType=VARCHAR},#{principalName,jdbcType=VARCHAR},#{qrcodeUrl,jdbcType=VARCHAR},
+        #{createTime,jdbcType=VARCHAR},#{createUserId,jdbcType=VARCHAR},#{accessUpdateTime,jdbcType=VARCHAR},#{refreshUpdateTime,jdbcType=VARCHAR},#{authorizationCode,jdbcType=VARCHAR},
+        #{authorizerAccessToken,jdbcType=VARCHAR},#{authorizerRefreshToken,jdbcType=VARCHAR},#{authorizerState,jdbcType=VARCHAR})
+    </insert>
+
+    <select id="selectWeChatInfoByAuthAppid" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_wechat_info
+        WHERE authorizer_appid = #{authorizerAppid,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectWeChatInfoList" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_wechat_info
+        WHERE tenant_id = #{tenantId,jdbcType=VARCHAR} AND authorizer_state != '0'
+    </select>
+
+    <update id="deleteByAuthAppid" parameterType="java.lang.String">
+        UPDATE db_WuLiu.cltm_wechat_info
+        SET authorizer_state = '0'
+        WHERE authorizer_appid = #{authorizerAppid,jdbcType=VARCHAR}
+    </update>
+
+    <update id="updateByAuthAppid" parameterType="com.cn.model.weChat.WeChatInfo">
+        UPDATE db_WuLiu.cltm_wechat_info
+        <set>
+            <if test="userName !=null">
+                user_name = #{userName, jdbcType=VARCHAR},
+            </if>
+            <if test="nickName !=null">
+              nick_name = #{nickName, jdbcType=VARCHAR},
+            </if>
+            <if test="headImg !=null">
+              head_img = #{headImg, jdbcType=VARCHAR},
+            </if>
+            <if test="serviceTypeInfo != null">
+              service_type_info = #{serviceTypeInfo ,jdbcType=VARCHAR},
+            </if>
+            <if test="verifyTypeInfo != null">
+                verify_type_info = #{verifyTypeInfo, jdbcType=VARCHAR},
+            </if>
+            <if test="principalName != null">
+                principal_name = #{principalName, jdbcType=VARCHAR},
+            </if>
+            <if test="qrcodeUrl != null">
+                qrcode_url = #{qrcodeUrl, jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime, jdbcType=VARCHAR},
+            </if>
+            <if test="createUserId != null">
+                create_user_id = #{createUserId, jdbcType=VARCHAR},
+            </if>
+            <if test="accessUpdateTime != null">
+                access_update_time = #{accessUpdateTime, jdbcType=VARCHAR},
+            </if>
+            <if test="refreshUpdateTime != null">
+                refresh_update_time = #{refreshUpdateTime, jdbcType=VARCHAR},
+            </if>
+            <if test="authorizationCode != null">
+                authorization_code = #{authorizationCode, jdbcType=VARCHAR},
+            </if>
+            <if test="authorizerAccessToken != null">
+                authorizer_access_token = #{authorizerAccessToken, jdbcType=VARCHAR},
+            </if>
+            <if test="authorizerRefreshToken !=null">
+                authorizer_refresh_token = #{authorizerRefreshToken, jdbcType=VARCHAR},
+            </if>
+            <if test="authorizerState != null">
+                authorizer_state = #{authorizerState, jdbcType=VARCHAR},
+            </if>
+        </set>
+        WHERE authorizer_appid = #{authorizerAppid, jdbcType=VARCHAR}
+    </update>
+
+    <insert id="insertSelective" parameterType="com.cn.model.weChat.WeChatInfo">
+        INSERT INTO db_WuLiu.cltm_wechat_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pkId != null">
+                pk_id,
+            </if>
+            <if test="authorizerAppid != null">
+                authorizer_appid,
+            </if>
+            <if test="tenantId != null">
+                tenant_id,
+            </if>
+            <if test="tenant_id != null">
+                pk_id,
+            </if>
+            <if test="userName != null">
+                user_name,
+            </if>
+            <if test="nickName != null">
+                nick_name,
+            </if>
+            <if test="headImg != null">
+                head_img,
+            </if>
+            <if test="serviceTypeInfo != null">
+                service_type_info,
+            </if>
+            <if test="verifyTypeInfo != null">
+                verify_type_info,
+            </if>
+            <if test="principalName != null">
+                principal_name,
+            </if>
+            <if test="qrcodeUrl != null">
+                qrcode_url,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUserId != null">
+                create_user_id,
+            </if>
+            <if test="accessUpdateTime != null">
+                access_update_time,
+            </if>
+            <if test="refreshUpdateTime != null">
+                refresh_update_time,
+            </if>
+            <if test="authorizationCode != null">
+                authorization_code,
+            </if>
+            <if test="authorizerAccessToken != null">
+                authorizer_access_token,
+            </if>
+            <if test="authorizerRefreshToken != null">
+                authorizer_refresh_token,
+            </if>
+            <if test="authorizerState != null">
+                authorizer_state,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" prefixOverrides=",">
+            <if test="pkId != null">
+                pk_id = #{pkId, jdbcType=BIGINT},
+            </if>
+            <if test="authorizerAppid != null">
+                authorizer_appid = #{authorizerAppid, jdbcType = VARCHAR},
+            </if>
+            <if test="tenantId != null">
+                tenant_id = #{tenantId,jdbcType = VARCHAR},
+            </if>
+            <if test="userName != null">
+                user_name = #{userName, jdbcType = VARCHAR},
+            </if>
+            <if test="nickName != null">
+                nick_name = #{nickName,jdbcType = VARCHAR},
+            </if>
+            <if test="headImg != null">
+                head_img = #{headImg,jdbcType = VARCHAR},
+            </if>
+            <if test="serviceTypeInfo != null">
+                service_type_info = #{serviceTypeInfo, jdbcType = VARCHAR},
+            </if>
+            <if test="verifyTypeInfo != null">
+                verify_type_info = #{verifyTypeInfo, jdbcType = VARCHAR},
+            </if>
+            <if test="principalName != null">
+                principal_name = #{principalName ,jdbcType = VARCHAR},
+            </if>
+            <if test="qrcodeUrl != null">
+                qrcode_url = #{qrcodeUrl, jdbcType = VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime, jdbcType = VARCHAR},
+            </if>
+            <if test="createUserId != null">
+                create_user_id = #{createUserId, jdbcType=VARCHAR},
+            </if>
+            <if test="accessUpdateTime != null">
+                access_update_time = #{accessUpdateTime, jdbcType = VARCHAR},
+            </if>
+            <if test="refreshUpdateTime != null">
+                refresh_update_time = #{refreshUpdateTime, jdbcType = VARCHAR},
+            </if>
+            <if test="authorizationCode != null">
+                authorization_code = #{authorizationCode, jdbcType = VARCHAR},
+            </if>
+            <if test="authorizerAccessToken != null">
+                authorizer_access_token = #{authorizerAccessToken, jdbcType = VARCHAR},
+            </if>
+            <if test="authorizerRefreshToken != null">
+                authorizer_refresh_token = #{authorizerRefreshToken, jdbcType = VARCHAR},
+            </if>
+            <if test="authorizerState != null">
+                authorizer_state = #{authorizerState, jdbcType = VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+</mapper>

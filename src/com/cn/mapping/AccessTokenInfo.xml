@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cn.mapper.AccessTokenInfoDAO">
+    <resultMap id="BaseResultMap" type="com.cn.model.weChat.AccessTokenInfo">
+        <id property="pkId" column="pk_id" jdbcType="BIGINT"/>
+        <result property="componentVerifyTicket" column="component_verify_ticket" jdbcType="VARCHAR"/>
+        <result property="componentAccessToken" column="component_access_token" jdbcType="VARCHAR"/>
+        <result property="preAuthCode" column="pre_auth_code" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="VARCHAR"/>
+        <result property="tokenUpdateTime" column="token_update_time" jdbcType="VARCHAR"/>
+        <result property="codeUpdateTime" column="code_update_time" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        pk_id,component_verify_ticket,component_access_token,pre_auth_code,create_time,
+        token_update_time,code_update_time
+    </sql>
+
+    <select id="selectActInfo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_access_token_info
+    </select>
+
+    <update id="updateAccessToken" parameterType="com.cn.model.weChat.AccessTokenInfo">
+        UPDATE db_WuLiu.cltm_access_token_info
+        <set>
+            <if test="pkId != null">
+                pk_id = #{pkId, jdbcType = BIGINT},
+            </if>
+            <if test="tenantId !=null">
+                tenant_id = #{tenantId ,jdbcType=VARCHAR},
+            </if>
+            <if test="componentVerifyTicket !=null">
+                component_verify_ticket = #{componentVerifyTicket ,jdbcType=VARCHAR},
+            </if>
+            <if test="componentAccessToken !=null">
+                component_access_token = #{componentAccessToken ,jdbcType=VARCHAR},
+            </if>
+            <if test="preAuthCode !=null">
+                pre_auth_code = #{preAuthCode ,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime !=null">
+                create_time = #{createTime ,jdbcType=VARCHAR},
+            </if>
+            <if test="tokenUpdateTime !=null">
+                token_update_time = #{tokenUpdateTime ,jdbcType=VARCHAR},
+            </if>
+            <if test="codeUpdateTime !=null">
+                code_update_time = #{codeUpdateTime ,jdbcType=VARCHAR},
+            </if>
+        </set>
+    </update>
+
+    <insert id="saveActInfo" parameterType="com.cn.model.weChat.AccessTokenInfo">
+        INSERT INTO db_WuLiu.cltm_access_token_info(pk_id,component_verify_ticket,component_access_token,pre_auth_code,create_time,
+        token_update_time,code_update_time)
+        VALUES (#{pkId, jdbcType = BIGINT},#{componentVerifyTicket ,jdbcType=VARCHAR},#{componentAccessToken ,jdbcType=VARCHAR},
+        #{preAuthCode ,jdbcType=VARCHAR},#{createTime ,jdbcType=VARCHAR},#{tokenUpdateTime ,jdbcType=VARCHAR},#{codeUpdateTime ,jdbcType=VARCHAR})
+    </insert>
+
+    <insert id="insertSelective" parameterType="com.cn.model.weChat.AccessTokenInfo">
+        INSERT INTO db_WuLiu.cltm_access_token_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pkId != null">
+                pk_id,
+            </if>
+            <if test="componentVerifyTicket != null">
+                component_verify_ticket,
+            </if>
+            <if test="componentAccessToken != null">
+                component_access_token,
+            </if>
+            <if test="preAuthCode != null">
+                pre_auth_code,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="tokenUpdateTime != null">
+                token_update_time,
+            </if>
+            <if test="codeUpdateTime != null">
+                code_update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="pkId != null">
+                pk_id = #{pkId, jdbcType = BIGINT},
+            </if>
+            <if test="componentVerifyTicket !=null">
+                component_verify_ticket = #{componentVerifyTicket ,jdbcType=VARCHAR},
+            </if>
+            <if test="componentAccessToken !=null">
+                component_access_token = #{componentAccessToken ,jdbcType=VARCHAR},
+            </if>
+            <if test="preAuthCode !=null">
+                pre_auth_code = #{preAuthCode ,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime !=null">
+                create_time = #{createTime ,jdbcType=VARCHAR},
+            </if>
+            <if test="tokenUpdateTime !=null">
+                token_update_time = #{tokenUpdateTime ,jdbcType=VARCHAR},
+            </if>
+            <if test="codeUpdateTime !=null">
+                code_update_time = #{codeUpdateTime ,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+</mapper>

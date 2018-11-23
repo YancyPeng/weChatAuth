@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cn.mapper.ReplyInfoDAO">
+    <resultMap id="BaseResultMap" type="com.cn.model.weChat.ReplyInfo">
+        <id column="pkId" property="pk_id" jdbcType="BIGINT"/>
+        <result property="replyId" column="reply_id" jdbcType="VARCHAR"/>
+        <result property="authorizerAppid" column="authorizer_appid" jdbcType="VARCHAR"/>
+        <result property="replyType" column="reply_type" jdbcType="VARCHAR"/>
+        <result property="text" column="text" jdbcType="VARCHAR"/>
+        <result property="imageMediaId" column="image_media_id" jdbcType="VARCHAR"/>
+        <result property="imageUrl" column="image_url" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="VARCHAR"/>
+        <result property="createUserId" column="create_user_id" jdbcType="VARCHAR"/>
+        <result property="updateTime" column="update_time" jdbcType="VARCHAR"/>
+        <result property="updateUserId" column="update_user_id" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        pk_id,reply_id,authorizer_appid,reply_type,text,image_media_id,image_url,create_time,create_user_id,
+        update_time,update_user_id
+    </sql>
+
+    <select id="selectByReplyId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_reply_info
+        WHERE reply_id = #{replyId, jdbcType=VARCHAR}
+    </select>
+
+    <delete id="deleteByReplyId" parameterType="java.lang.String">
+        DELETE FROM db_WuLiu.cltm_reply_info
+        WHERE reply_id = #{replyId, jdbcType=VARCHAR}
+    </delete>
+
+    <select id="selectReplyInfoList" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_reply_info
+        WHERE authorizer_appid = #{authorizerAppid, jdbcType=VARCHAR}
+    </select>
+
+    <update id="updateReplyInfo" parameterType="com.cn.model.weChat.ReplyInfo">
+        UPDATE db_WuLiu.cltm_reply_info
+        <set>
+            reply_type = #{replyType, jdbcType=VARCHAR},
+            text = #{text, jdbcType=VARCHAR},
+            image_media_id = #{imageMediaId, jdbcType=VARCHAR},
+            image_url = #{imageUrl, jdbcType=VARCHAR},
+            update_time = #{updateTime, jdbcType=VARCHAR}
+        </set>
+        WHERE reply_id =#{replyId, jdbcType=VARCHAR}
+    </update>
+
+    <insert id="saveReplyInfo" parameterType="com.cn.model.weChat.ReplyInfo">
+        INSERT INTO db_WuLiu.cltm_reply_info(<include refid="Base_Column_List"/>)
+        VALUES (#{pkId,jdbcType=BIGINT}, #{replyId,jdbcType=VARCHAR},#{authorizerAppid,jdbcType=VARCHAR},#{replyType, jdbcType=VARCHAR},#{text, jdbcType=VARCHAR},
+        #{imageMediaId, jdbcType=VARCHAR},#{imageUrl, jdbcType=VARCHAR},#{createTime, jdbcType=VARCHAR},#{createUserId, jdbcType=VARCHAR},
+        #{updateTime, jdbcType=VARCHAR},#{updateUserId, jdbcType=VARCHAR})
+    </insert>
+</mapper>

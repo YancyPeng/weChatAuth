@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cn.mapper.KeyWordDAO">
+    <resultMap id="BaseResultMap" type="com.cn.model.weChat.KeyWord">
+        <id column="pkId" property="pk_id" jdbcType="BIGINT"/>
+        <result property="authorizerAppid" column="authorizer_appid" jdbcType="VARCHAR"/>
+        <result property="ruleName" column="rule_name" jdbcType="VARCHAR"/>
+        <result property="keyWord" column="key_word" jdbcType="VARCHAR"/>
+        <result property="replyId" column="reply_id" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="VARCHAR"/>
+        <result property="createUserId" column="create_user_id" jdbcType="VARCHAR"/>
+        <result property="updateTime" column="update_time" jdbcType="VARCHAR"/>
+        <result property="updateUserId" column="update_user_id" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        pk_id,authorizer_appid,rule_name,key_word,reply_id,create_time,create_user_id,update_time,update_user_id
+    </sql>
+
+    <insert id="saveKeyWord" parameterType="java.util.List">
+        INSERT INTO db_WuLiu.cltm_key_word_info(<include refid="Base_Column_List"/>) VALUES
+        <foreach collection="list" item="keyword" separator=",">
+            (
+              #{keyword.pkId, jdbcType=BIGINT}, #{keyword.authorizerAppid, jdbcType=VARCHAR},#{keyword.ruleName, jdbcType=VARCHAR},
+              #{keyword.keyWord, jdbcType=VARCHAR}, #{keyword.replyId, jdbcType=VARCHAR},#{keyword.createTime,jdbcType=VARCHAR},
+              #{keyword.createUserId, jdbcType=VARCHAR},#{keyword.updateTime, jdbcType=VARCHAR},#{keyword.updateUserId, jdbcType=VARCHAR}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteKeyWord" parameterType="java.lang.String">
+        DELETE FROM db_WuLiu.cltm_key_word_info
+        WHERE reply_id = #{replyId, jdbcType=VARCHAR}
+    </delete>
+
+    <select id="selectKeyWordList" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_key_word_info
+        WHERE reply_id = #{replyId, jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectByAuthAppid" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM db_WuLiu.cltm_key_word_info
+        WHERE authorizer_appid = #{authorizerAppid, jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectByRuleName" resultType="java.lang.String">
+        SELECT reply_id
+        FROM db_WuLiu.cltm_key_word_info
+        WHERE authorizer_appid = #{authorizerAppid, jdbcType=VARCHAR}
+        AND rule_name = #{ruleName, jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectByKeyWord" resultType="java.lang.String">
+        SELECT reply_id
+        FROM db_WuLiu.cltm_key_word_info
+        WHERE authorizer_appid = #{authorizerAppid, jdbcType=VARCHAR}
+        AND key_word = #{keyWord, jdbcType=VARCHAR}
+    </select>
+
+</mapper>
