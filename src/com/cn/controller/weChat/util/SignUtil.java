@@ -13,15 +13,15 @@ public class SignUtil {
 
     //在第三方平台填写的token
 
-    private static String token = "hykf123456";
+    private static String token = "xxxxxxxx";
 
     //在第三方平台填写的加解密key
 
-    private static String encodingAesKey = "8nfdaf83n3ygn3um3ianmkli2239an0184nhalocner";
+    private static String encodingAesKey = "xxxxxxxx";
 
     //公众号第三方平台的appid
 
-    private static String appId = "wx77c6c812c7b5a32d";
+    private static String appId = "xxxxxxxxxxxxxxx";
 
     //微信加密签名
     private static String msg_signature;

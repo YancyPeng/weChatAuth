@@ -2,6 +2,7 @@ package com.cn.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cn.controller.weChat.util.HttpClientUtil;
+import com.cn.controller.weChat.util.IPUtil;
 import com.cn.controller.weChat.util.SignUtil;
 import com.cn.controller.weChat.util.XmlUtil;
 import com.cn.model.weChat.ReplyInfo;
@@ -39,32 +40,34 @@ public class MsgAndEventConttoller {
     @Autowired
     private IAccessTokenInfoSV iAccessTokenInfoSV;
 
-    private String componentAppid = "wx77c6c812c7b5a32d";
+    private String componentAppid = "wx3faff19fa0b9cee8";
 
     /**
      * 事件和消息回调函数
      *
      * @param authorizerAppid 接受到的公众号appid
-     * @param postData           接收到的消息或事件的xml
+     * @param postData        接收到的消息或事件的xml
      * @return
      */
     @RequestMapping(value = "/{authorizerAppid}/callback", method = RequestMethod.POST)
-    public String callback(@PathVariable String authorizerAppid, @RequestBody String postData,
-                           HttpServletResponse response, HttpServletRequest request) {
+    public void callback(@PathVariable String authorizerAppid, @RequestBody String postData,
+                         HttpServletResponse response, HttpServletRequest request) {
+
+        System.out.println("消息与事件中发起请求的客户端地址为：------------------------" + IPUtil.getLocalIp(request));
         System.out.println("执行消息与事件接受方法  <callback> 的入参为：--------------------------" + postData);
         String resultData = SignUtil.decryptMsg(request, postData); // 解密后的xml
         try {
             Map<String, String> dataMap = XmlUtil.xmlToMap(resultData); // xml转换后的map
             System.out.println("解密后的公众号消息与事件的map为-------------------------" + dataMap);
             if (dataMap.get("MsgType").equals("event")) { // 如果接受到的是事件
-                return this.replyEvent(dataMap, authorizerAppid);
+                this.replyEvent(dataMap, authorizerAppid, response);
             } else { // 如果接受到的是消息
-                return this.replyMsg(dataMap, authorizerAppid, response);
+                this.replyMsg(dataMap, authorizerAppid, response);
             }
         } catch (Exception e) {
-            System.out.println("执行消息与事件接受方法 <callback> 时加解密消息失败");
+            System.out.println("执行消息与事件接受方法 <callback> 时回复消息失败");
             e.printStackTrace();
-            return "success";
+            this.output(response, "success");
         }
 
     }
@@ -75,19 +78,24 @@ public class MsgAndEventConttoller {
      * @param map 事件xml转换成的map
      * @return 返回对事件的回复（加密的xml）
      */
-    private String replyEvent(Map<String, String> map, String authorizerAppid) {
+    private void replyEvent(Map<String, String> map, String authorizerAppid, HttpServletResponse response) {
         String event = map.get("Event");
         switch (event) {
             case "subscribe":  // 关注事件
-                return this.replySubscribeEvent(map, authorizerAppid);
+                this.replySubscribeEvent(map, authorizerAppid, response);
+                break;
             case "unsubscribe": // 取消关注事件
-                return "success";
+                this.output(response, "success");
+                break;
             case "CLICK": // 点击事件
-                return this.replyClickEvent(map);
+                this.replyClickEvent(map, response);
+                break;
             case "VIEW": // 菜单链接事件
-                return "success";
+                this.output(response, "success");
+                break;
             default:
-                return "success";
+                this.output(response, "success");
+                break;
         }
 
     }
@@ -98,21 +106,21 @@ public class MsgAndEventConttoller {
      * @param map 事件xml转换成的map
      * @return 对订阅事件的回复（加密的xml）
      */
-    private String replySubscribeEvent(Map<String, String> map, String authorizerAppid) {
+    private void replySubscribeEvent(Map<String, String> map, String authorizerAppid, HttpServletResponse response) {
         System.out.println("接收到了关注事件------------------------------");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("keyWord", "订阅");
         jsonObject.put("authorizerAppid", authorizerAppid);
         String replyId = iKeyWordSV.selectByKeyWord(jsonObject);
-        if (replyId != null){
+        if (replyId != null) {
             ReplyInfo replyInfo = iReplyInfoSV.selectByReplyId(replyId);
             Map<String, Object> sendMap = this.setPubMap(map, replyInfo);
-            System.out.println("发送给用户的订阅回复消息为：--------------------------" +sendMap);
+            System.out.println("发送给用户的订阅回复消息为：--------------------------" + sendMap);
             String sendXml = XmlUtil.mapToXml(sendMap);
             String encryptXml = SignUtil.encryptMsg(sendXml);
-            return encryptXml;
-        }else {
-            return "success";
+            this.output(response, encryptXml);
+        } else {
+            this.output(response, "success");
         }
     }
 
@@ -122,43 +130,51 @@ public class MsgAndEventConttoller {
      * @param map 事件xml转换成的map
      * @return 对点击事件的回复(加密的xml)
      */
-    private String replyClickEvent(Map<String, String> map) {
+    private void replyClickEvent(Map<String, String> map, HttpServletResponse response) {
         System.out.println("接受到了用户的点击菜单事件-----------------------");
         String eventKey = map.get("EventKey"); // 这个key对应于回复表中的replyId
         ReplyInfo replyInfo = iReplyInfoSV.selectByReplyId(eventKey);
         Map<String, Object> sendMap = this.setPubMap(map, replyInfo);
         String sendXml = XmlUtil.mapToXml(sendMap);
         String encryptXml = SignUtil.encryptMsg(sendXml);
-        return encryptXml;
+        this.output(response, encryptXml);
     }
 
 
     /**
      * 回复消息
      *
-     * @param map                事件xml转换成的map
+     * @param map             事件xml转换成的map
      * @param authorizerAppid 公众号appid
      * @return
      */
-    private String replyMsg(Map<String, String> map, String authorizerAppid, HttpServletResponse response) {
+    private void replyMsg(Map<String, String> map, String authorizerAppid, HttpServletResponse response) {
         String msgType = map.get("MsgType");
         switch (msgType) {
             case "text":   // 文本消息
-                return this.replyTextMsg(map, authorizerAppid, response);
+                this.replyTextMsg(map, authorizerAppid, response);
+                break;
             case "image":   // 图片消息
-                return "success";
+                this.output(response, "success");
+                break;
             case "voice":   // 语音消息
-                return "success";
+                this.output(response, "success");
+                break;
             case "video":   // 视频消息
-                return "success";
+                this.output(response, "success");
+                break;
             case "shortvideo":  // 小视频消息
-                return "";
+                this.output(response, "success");
+                break;
             case "location":    // 地理位置消息
-                return "success";
+                this.output(response, "success");
+                break;
             case "link":    // 链接消息
-                return "success";
+                this.output(response, "success");
+                break;
             default:
-                return "success";
+                this.output(response, "success");
+                break;
         }
     }
 
@@ -169,7 +185,7 @@ public class MsgAndEventConttoller {
      * @param authorizerAppid
      * @return
      */
-    private String replyTextMsg(Map<String, String> map, String authorizerAppid, HttpServletResponse response) {
+    private void replyTextMsg(Map<String, String> map, String authorizerAppid, HttpServletResponse response) {
         String content = map.get("Content");
         System.out.println("接受到的用户发送的文本消息为：---------------" + content);
         Map<String, Object> sendMap = new HashMap<>();
@@ -179,7 +195,8 @@ public class MsgAndEventConttoller {
             sendMap.put("Content", "TESTCOMPONENT_MSG_TYPE_TEXT_callback");
             String sendXml = XmlUtil.mapToXml(sendMap);
             String encryptXml = SignUtil.encryptMsg(sendXml);
-            return encryptXml;
+            System.out.println("全网发布检测模拟粉丝发送文本消息给专用测试公众号，准备发送的加密xml为：" + encryptXml);
+            this.output(response, encryptXml);
         } else if (content.startsWith("QUERY_AUTH_CODE")) {   // 全网发布检测模拟粉丝发送文本消息给专用测试公众号，第三方平台方需在5秒内返回空串表明暂时不回复，然后再立即使用客服消息接口发送消息回复粉丝
             System.out.println("接收到粉丝发送的消息为：--------------------------" + content);
             // 首先回复空串
@@ -220,22 +237,19 @@ public class MsgAndEventConttoller {
             params.put("keyWord", content);
             params.put("authorizerAppid", authorizerAppid);
             String replyId = iKeyWordSV.selectByKeyWord(params);
-            if (replyId !=null){
+            if (replyId != null) {
                 replyInfo = iReplyInfoSV.selectByReplyId(replyId);
                 System.out.println("回复给用户的replyInfo 为： --------------" + replyInfo);
                 sendMap = this.setPubMap(map, replyInfo);
                 System.out.println("回复给用户的消息为：-------------------- sendMap = " + sendMap);
-
-            }else{
-                sendMap = this.setPubMap(map,replyInfo);
+            } else {
+                sendMap = this.setPubMap(map, replyInfo);
             }
+            System.out.println("回复给用户的消息为--------------------sendMap = " + sendMap);
             String sendXml = XmlUtil.mapToXml(sendMap);
             String encryptXml = SignUtil.encryptMsg(sendXml);
-            return encryptXml;
-
+            this.output(response, encryptXml);
         }
-        return "";
-
     }
 
     /**
@@ -253,7 +267,6 @@ public class MsgAndEventConttoller {
         sendMap.put("ToUserName", toUserName);
         sendMap.put("FromUserName", fromUserName);
         sendMap.put("CreateTime", createTime + "");
-        sendMap.put("MsgType", "text");
         if (replyInfo != null) {
             if (replyInfo.getReplyType().equals("text")) {
                 sendMap.put("MsgType", "text");
@@ -262,9 +275,9 @@ public class MsgAndEventConttoller {
                 sendMap.put("MsgType", "image");
                 sendMap.put("MediaId", replyInfo.getImageMediaId());
             }
-        }else {
+        } else {
             sendMap.put("MsgType", "text");
-            sendMap.put("Content","输入关键词有误，请重新输入。");
+            sendMap.put("Content", "输入关键词有误，请重新输入。");
         }
 
         return sendMap;
@@ -273,7 +286,7 @@ public class MsgAndEventConttoller {
     private void output(HttpServletResponse response, String returnValue) {
         try {
             ServletOutputStream output = response.getOutputStream();
-            output.write(returnValue.toString().getBytes());
+            output.write(returnValue.getBytes());
             output.flush();
         } catch (IOException e) {
             e.printStackTrace();

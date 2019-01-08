@@ -37,9 +37,9 @@ public class AuthorizedController {
 
     private static Map<String, String> authorizedMap = new HashMap<>();
 
-    private String ComponentAppId = "wx77c6c812c7b5a32d"; // 第三方平台appid
+    private String ComponentAppId = "xxxx"; // 第三方平台appid
 
-    private String ComponentAppSecret = "fe52b59c143166926aa4e51b3d070f06"; // 第三方平台appsecret
+    private String ComponentAppSecret = "xxxxxx"; // 第三方平台appsecret
 
     @Autowired
     private IWeChatInfoSV iWeChatInfoSV;
@@ -68,8 +68,7 @@ public class AuthorizedController {
 //    })
     public String receiveAuthorizedEvent(@RequestBody(required = false) String postdata, HttpServletRequest request) {
         System.out.println("调用接受授权事件通知的方法 <getAuthorizedEvent> 的入参为：-----------------------" + postdata);
-////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-//                .getRequest();
+        System.out.println("调用接受授权事件通知的方法 <getAuthorizedEvent> 的微信服务器ip地址为：-----------------------" + IPUtil.getLocalIp(request));
         String decryptXml = SignUtil.decryptMsg(request, postdata); // 获得解密后的xml文件
         String infoType; // 事件类型
         try {
@@ -152,32 +151,27 @@ public class AuthorizedController {
     public void authorize() {
 //        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
-        String redirectUrl = "http://hykf.natapp1.cc/authorized/success/info";
+        String redirectUrl = "http://hykf.natapp1.cc/authorized/success/info"; // 授权成功回调url
         AccessTokenInfo accessTokenInfo = iAccessTokenInfoSV.selectActInfo(); // 获取公共授权码对象
 
-        Long codeUpdateTime = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).parse(accessTokenInfo.getCodeUpdateTime(), new ParsePosition(0)).getTime();
         Long currentTime = System.currentTimeMillis();
         String preAuthCode = "";
-        if ((currentTime - codeUpdateTime) / 1000 >= 600) { // 如果大于10分钟，就去调用微信接口更新
-            String componentAccessToken = accessTokenInfo.getComponentAccessToken();
-            // 接下来根据component_access_token来获取预授权码 pre_auth_code
-            JSONObject params = new JSONObject();
-            params.put("component_appid", ComponentAppId);
-            String result = HttpClientUtil.httpPost("https://api.weixin.qq.com/cgi-bin/component/api_create_preauthcode?component_access_token=" + componentAccessToken, params.toJSONString());
-            preAuthCode = JSONObject.parseObject(result).getString("pre_auth_code");
-            System.out.println("获取的pre_auth_code为：------------------------" + preAuthCode);
-            if (!(StringUtils.isEmpty(preAuthCode))) { // 如果获取到预授权码才更新
-                JSONObject params1 = new JSONObject();
-                params1.put("preAuthCode", preAuthCode);
-                params1.put("codeUpdateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentTime));
-                int update = iAccessTokenInfoSV.updateAccessToken(params1); // 更新本地数据库
-                System.out.println("更新预授权码 【0：失败，1：成功】 update = " + update);
-            } else {
-                System.out.println("component_access_token 的值过期了！！！！！！！");
-            }
-        } else { // 如果小于10分钟 直接取
-            preAuthCode = accessTokenInfo.getPreAuthCode();
+        String componentAccessToken = accessTokenInfo.getComponentAccessToken();
+        // 接下来根据component_access_token来获取预授权码 pre_auth_code
+        JSONObject params = new JSONObject();
+        params.put("component_appid", ComponentAppId);
+        String result = HttpClientUtil.httpPost("https://api.weixin.qq.com/cgi-bin/component/api_create_preauthcode?component_access_token=" + componentAccessToken, params.toJSONString());
+        preAuthCode = JSONObject.parseObject(result).getString("pre_auth_code");
+        System.out.println("获取的pre_auth_code为：------------------------" + preAuthCode);
+        if (!(StringUtils.isEmpty(preAuthCode))) { // 如果获取到预授权码才更新
+            JSONObject preParams = new JSONObject();
+            preParams.put("preAuthCode", preAuthCode);
+            int update = iAccessTokenInfoSV.updateAccessToken(preParams); // 更新本地数据库
+            System.out.println("更新预授权码 【0：失败，1：成功】 update = " + update);
+        } else {
+            System.out.println("Controller层 请求新增授权方法《authorize》时 component_access_token 的值过期了！！！！！！！");
         }
+
         try {
 
 //            request.getRequestDispatcher("https://mp.weixin.qq.com/cgi-bin/componentloginpage?component_appid=" + ComponentAppId
@@ -312,14 +306,18 @@ public class AuthorizedController {
                 String result = HttpClientUtil.httpPost("https://api.weixin.qq.com/cgi-bin/component/api_component_token", params.toJSONString());
                 System.out.println("获取component_access_token的结果为：---------------------" + result);
                 String componentAccessToken = JSONObject.parseObject(result).getString("component_access_token");
+                if (!StringUtils.isEmpty(componentAccessToken)) {
+                    // 拼装参数，添加到本地数据库
+                    JSONObject tokenParams = new JSONObject();
+                    tokenParams.put("componentVerifyTicket", componentVerifyTicket);
+                    tokenParams.put("componentAccessToken", componentAccessToken);
+                    tokenParams.put("tokenUpdateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentTime));
+                    int update = iAccessTokenInfoSV.updateAccessToken(tokenParams);
+                    System.out.println("更新第三方接口调用凭据component_access_token 【0：失败，1：成功】 update = " + update);
+                } else {
+                    System.out.println("Controller层执行 《setPublicAuthorizedCode》方法时返回值有错---------");
+                }
 
-                // 拼装参数，添加到本地数据库
-                JSONObject params1 = new JSONObject();
-                params1.put("componentVerifyTicket", componentVerifyTicket);
-                params1.put("componentAccessToken", componentAccessToken);
-                params1.put("tokenUpdateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentTime));
-                int update = iAccessTokenInfoSV.updateAccessToken(params1);
-                System.out.println("更新第三方接口调用凭据component_access_token 【0：失败，1：成功】 update = " + update);
             } // 如果小于则不需要更新
 
         } else { //首次接收ticket，需要走一遍整个流程，获取component_access_token和pre_auth_code，添加进本地数据库
@@ -334,19 +332,24 @@ public class AuthorizedController {
             String componentAccessToken = JSONObject.parseObject(result).getString("component_access_token");
 
             // 获取pre_auth_code
-            JSONObject params1 = new JSONObject();
-            params1.put("component_appid", ComponentAppId);
-            result = HttpClientUtil.httpPost("https://api.weixin.qq.com/cgi-bin/component/api_create_preauthcode?component_access_token=" + componentAccessToken, params1.toJSONString());
+            JSONObject preParams = new JSONObject();
+            preParams.put("component_appid", ComponentAppId);
+            result = HttpClientUtil.httpPost("https://api.weixin.qq.com/cgi-bin/component/api_create_preauthcode?component_access_token=" + componentAccessToken, preParams.toJSONString());
             System.out.println("首次获取的pre_auth_code为：------------------------" + result);
             String preAuthCode = JSONObject.parseObject(result).getString("pre_auth_code");
 
             // 封装参数，添加进本地数据库
-            JSONObject params2 = new JSONObject();
-            params2.put("componentVerifyTicket", componentVerifyTicket);
-            params2.put("componentAccessToken", componentAccessToken);
-            params2.put("preAuthCode", preAuthCode);
-            int insert = iAccessTokenInfoSV.insertSelective(params2);
-            System.out.println("首次添加公共授权码进本地数据库  【0：失败，1：成功】 insert = " + insert);
+            if (!StringUtils.isEmpty(componentAccessToken) && !StringUtils.isEmpty(preAuthCode)) {
+                JSONObject tokenParams = new JSONObject();
+                tokenParams.put("componentVerifyTicket", componentVerifyTicket);
+                tokenParams.put("componentAccessToken", componentAccessToken);
+                tokenParams.put("preAuthCode", preAuthCode);
+                int insert = iAccessTokenInfoSV.insertSelective(tokenParams);
+                System.out.println("首次添加公共授权码进本地数据库  【0：失败，1：成功】 insert = " + insert);
+            } else {
+                System.out.println("首次请求componentAccessToken或者preAuthCode时失败----------");
+            }
+
         }
 
     }
@@ -433,5 +436,6 @@ public class AuthorizedController {
 //
 //        return result;
 //    }
+
 
 }
